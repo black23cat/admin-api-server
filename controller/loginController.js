@@ -2,21 +2,15 @@ require('dotenv').config();
 const jwt = require('jsonwebtoken');
 const passport = require('passport');
 const loginValidation = require('../validator/authValidator').loginValidator;
-const { validationResult } = require('express-validator');
-
-async function loginPost(req, res, next) {
-  // Validate user input fields
-  const errors = validationResult(req);
-  if (!errors.isEmpty()) {
-    return res.status(400).json(errors.array());
-  }
-  next();
-}
+const { validateInput } = require('../validator/inputValidation.js');
 
 async function handleLoginAuth(req, res, next) {
   passport.authenticate('local', { session: false }, (err, user, info) => {
-    if (err || !user) {
+    if (err) {
       return next(err);
+    }
+    if (!user) {
+      return res.status(404).json('User tidak ditemukan');
     }
     // SIGN JWT Token for succes user login
     const secret = process.env.JWT_SECRET;
@@ -32,13 +26,13 @@ async function handleLoginAuth(req, res, next) {
         if (err) {
           return next(err);
         }
-        return res.json(token);
+        return res.status(200).json(token);
       },
     );
   })(req, res, next);
 }
 
 module.exports = {
-  loginValidation: [loginValidation, loginPost],
+  loginValidation: [loginValidation, validateInput],
   loginAuth: handleLoginAuth,
 };
