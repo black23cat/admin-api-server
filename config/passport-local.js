@@ -16,13 +16,13 @@ const verifyCallback = async (username, password, done) => {
     // Check if the user exists in database
     const getUser = await queries.getUser(username, email);
     if (getUser === null) {
-      return done(null, false, { message: errorMessage });
+      return done(null, false, { message: 'User tidak ditemukan' });
     }
     const match = await comparePassword(password, getUser.password);
     if (!match) {
-      return done(null, false, { message: errorMessage });
+      return done(null, false, { message: 'User tidak ditemukan' });
     }
-    return done(null, getser);
+    return done(null, getUser);
   } catch (err) {
     return done(err);
   }
