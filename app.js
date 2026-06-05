@@ -2,6 +2,8 @@ const express = require('express');
 const cors = require('cors');
 // Import required Router
 const loginRouter = require('./router/loginRouter.js');
+const poRouter = require('./router/poRouter.js');
+const { PrismaClient, Prisma } = require('./generated/prisma/client');
 
 require('dotenv').config();
 require('./config/passport-local');
@@ -24,10 +26,23 @@ app.get('/', (req, res) => {
 });
 
 app.use('/login', loginRouter);
+app.use('/purchase-order', poRouter);
 
 // Express error catch
 app.use((err, req, res, next) => {
-  return res.status(400).json();
+  const prismaError = err instanceof Prisma.PrismaClientKnownRequestError;
+  if (prismaError && (err.code.startsWith('P1') || err.code === 'P2024')) {
+    return res.status(500).json('Internal Server Error');
+  }
+  if (prismaError && err.code === 'P2002') {
+    return res.status(409).json('Data sudah ada di database');
+  }
+  if (prismaError && err.code === '2025') {
+    return res.status(404).json('Data tidak ditemukan');
+  }
+  return res
+    .status(err.status || 500)
+    .json({ message: err.message || 'Internal Server Error' });
 });
 
 app.listen(PORT, (err) => {

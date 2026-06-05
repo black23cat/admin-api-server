@@ -22,7 +22,29 @@ model User {
   role      Role    @default(User)
 }
 
+model PurchaseOrder {
+  id           Int       @id @default(autoincrement())
+  customerName String
+  printed      Boolean   @default(false)
+  createdAt    DateTime  @default(now())
+  done         Boolean   @default(false)
+  poType       PrintType @default(eco)
+  fileList     File[]
+}
+
+model File {
+  id       Int           @id @default(autoincrement())
+  filename String
+  po       PurchaseOrder @relation(fields: [poId], references: [id])
+  poId     Int
+}
+
 enum Role {
   Admin
   User
+}
+
+enum PrintType {
+  eco
+  sublim
 }
