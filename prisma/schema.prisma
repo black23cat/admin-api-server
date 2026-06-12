@@ -25,6 +25,8 @@ model User {
 model PurchaseOrder {
   id           Int       @id @default(autoincrement())
   customerName String
+  invoice      Invoice?  @relation(fields: [invoiceId], references: [id])
+  invoiceId    Int?
   printed      Boolean   @default(false)
   createdAt    DateTime  @default(now())
   done         Boolean   @default(false)
@@ -39,6 +41,17 @@ model File {
   poId     Int
 }
 
+model Invoice {
+  id             Int             @id() @default(autoincrement())
+  invoiceNumber  Int             @default(autoincrement())
+  customerName   String
+  customerPhone  String?
+  amount         Int
+  createdAt      DateTime        @default(now())
+  status         PaymentStatus   @default(Pending)
+  purchaseOrders PurchaseOrder[]
+}
+
 enum Role {
   Admin
   User
@@ -47,4 +60,10 @@ enum Role {
 enum PrintType {
   eco
   sublim
+}
+
+enum PaymentStatus {
+  Pending
+  Paid
+  Cancelled
 }

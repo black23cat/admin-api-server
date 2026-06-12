@@ -27,8 +27,26 @@ async function newPurchaseOrder(req, res, next) {
   }
 }
 
+async function updatePurchaseOrder(req, res, next) {
+  try {
+    const { customerName, poType, fileList } = matchedData(req);
+    const { poId } = req.params;
+
+    const updatePo = await queries.updatePo(Number(poId), {
+      customerName,
+      poType,
+      fileList,
+    });
+    console.log(updatePo);
+    return res.status(200).json(updatePo);
+  } catch (error) {
+    next(error);
+  }
+}
+
 module.exports = {
   purchaseOrder,
   validatePoInput: [newPoValidator, validateInput],
   newPurchaseOrder,
+  updatePurchaseOrder,
 };
