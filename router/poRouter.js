@@ -14,15 +14,12 @@ const authenticate = (req, res, next) => {
 
 poRouter.use(authenticate);
 poRouter.get('/', controller.purchaseOrder);
-poRouter.post(
-  '/create',
-  controller.validatePoInput,
-  controller.newPurchaseOrder,
-);
+poRouter.post('/', controller.validatePoInput, controller.newPurchaseOrder);
 poRouter.put(
   '/:poId',
   controller.validatePoInput,
   controller.updatePurchaseOrder,
 );
+poRouter.delete('/:poId', controller.deletePo);
 
 module.exports = poRouter;

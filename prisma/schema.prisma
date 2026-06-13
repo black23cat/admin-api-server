@@ -37,7 +37,7 @@ model PurchaseOrder {
 model File {
   id       Int           @id @default(autoincrement())
   filename String
-  po       PurchaseOrder @relation(fields: [poId], references: [id])
+  po       PurchaseOrder @relation(fields: [poId], references: [id], onDelete: Cascade)
   poId     Int
 }
 

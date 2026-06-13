@@ -37,8 +37,17 @@ async function updatePurchaseOrder(req, res, next) {
       poType,
       fileList,
     });
-    console.log(updatePo);
     return res.status(200).json(updatePo);
+  } catch (error) {
+    next(error);
+  }
+}
+
+async function deletePo(req, res, next) {
+  try {
+    const { poId } = req.params;
+    const deletedPo = await queries.deletePo(Number(poId));
+    return res.status(200).json(deletedPo);
   } catch (error) {
     next(error);
   }
@@ -49,4 +58,5 @@ module.exports = {
   validatePoInput: [newPoValidator, validateInput],
   newPurchaseOrder,
   updatePurchaseOrder,
+  deletePo,
 };
