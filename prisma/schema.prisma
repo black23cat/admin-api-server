@@ -42,14 +42,34 @@ model File {
 }
 
 model Invoice {
-  id             Int             @id() @default(autoincrement())
-  invoiceNumber  Int             @default(autoincrement())
-  customerName   String
-  customerPhone  String?
-  amount         Int
-  createdAt      DateTime        @default(now())
-  status         PaymentStatus   @default(Pending)
+  id            Int           @id() @default(autoincrement())
+  invoiceNumber Int           @default(autoincrement())
+  customerName  String
+  customerPhone String?
+  amount        Amount[]
+  createdAt     DateTime      @default(now())
+  status        PaymentStatus @default(Pending)
+
   purchaseOrders PurchaseOrder[]
+  paymentDetails PaymentDetails[]
+}
+
+model Amount {
+  id         Int     @id() @default(autoincrement())
+  ecoSolvent Int?
+  sublim     Int?
+  total      Int
+  invoice    Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  invoiceId  Int
+}
+
+model PaymentDetails {
+  id          Int           @id @default(autoincrement())
+  method      PaymentMethod
+  amountPaid  Int
+  paymentDate DateTime      @default(now())
+  invoice     Invoice       @relation(fields: [invoiceId], references: [id])
+  invoiceId   Int
 }
 
 enum Role {
@@ -66,4 +86,9 @@ enum PaymentStatus {
   Pending
   Paid
   Cancelled
+}
+
+enum PaymentMethod {
+  Cash
+  Transfer
 }

@@ -1,0 +1,83 @@
+const queries = require('../lib/queries');
+
+async function newInvoice(req, res, next) {
+  try {
+    const { allowMissmatch, selectedIds } = req.body;
+    if (allowMissmatch) {
+      const { printDetails } = req.body;
+      const newInvoice = await queries.newInvoice(selectedIds, printDetails);
+      return res.status(201).json('Invoice created');
+    }
+
+    /* 
+    --------------------------------------------------------
+    Check if all po has same customer name
+    send confirmation for different customer name to client
+    send price and total length of purchase order to client 
+    ---------------------------------------------------------- 
+    */
+
+    let isSame = true;
+    let ecoSolventPoLength = 0;
+    let sublimPoLength = 0;
+    const purchaseOrderList = await queries.getPoByIds(selectedIds);
+    const customerName = [purchaseOrderList[0].customerName];
+    const defaultPrice = {
+      eco: 27000,
+      sublim: 53000,
+    };
+    if (!allowMissmatch) {
+      // Get 1 customer name from po to check across all po customer name
+
+      for (const po of purchaseOrderList) {
+        //Check for different customer name on each po
+        if (po.customerName !== customerName[0]) {
+          isSame = false;
+          customerName.push(po.customerName);
+        }
+
+        po.fileList.forEach((file) => {
+          const filename = file.filename.split('_');
+          //Extract file length
+          const fileDimension = Number(filename[2].split('x')[1]);
+          //calculate each file total length and asign it to specific po type
+          const printCount = Number(
+            filename[filename.length - 1].toLowerCase().replace('x', ''),
+          );
+          const CM_TO_METER = 100;
+          const totalFileLength = (fileDimension * printCount) / CM_TO_METER;
+          if (po.poType === 'eco') {
+            return (ecoSolventPoLength += totalFileLength);
+          } else if (po.poType === 'sublim') {
+            return (sublimPoLength += totalFileLength);
+          }
+        });
+      }
+    }
+
+    const message = {
+      needMissmatchConfirmation: false,
+      customerName: customerName.join('_'),
+      printDetails: {
+        eco: {
+          printLength: ecoSolventPoLength > 0 ? ecoSolventPoLength : null,
+          price: defaultPrice.eco,
+        },
+        sublim: {
+          printLength: sublimPoLength > 0 ? sublimPoLength : null,
+          price: defaultPrice.sublim,
+        },
+      },
+    };
+
+    if (!isSame) {
+      message.needMissmatchConfirmation = true;
+    }
+
+    return res.status(422).json(message);
+  } catch (error) {
+    next(error);
+  }
+}
+
+module.exports = { newInvoice };

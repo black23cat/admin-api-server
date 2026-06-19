@@ -31,8 +31,14 @@ async function updatePurchaseOrder(req, res, next) {
   try {
     const { customerName, poType, fileList } = matchedData(req);
     const { poId } = req.params;
+    const id = Number(poId);
+    const [po] = await queries.getPoByIds([id]);
 
-    const updatePo = await queries.updatePo(Number(poId), {
+    if (po.invoiceId !== null) {
+      return res.status(400).json({ msg: 'Invoice untuk po ini sudah dibuat' });
+    }
+
+    const updatePo = await queries.updatePo(id, {
       customerName,
       poType,
       fileList,

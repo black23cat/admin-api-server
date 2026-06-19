@@ -1,8 +1,10 @@
 const express = require('express');
 const cors = require('cors');
+const jwtAuthenticate = require('./middleware/jwtAuth.js');
 // Import required Router
 const loginRouter = require('./router/loginRouter.js');
 const poRouter = require('./router/poRouter.js');
+const invoiceRouter = require('./router/invoiceRouter.js');
 const { PrismaClient, Prisma } = require('./generated/prisma/client');
 
 require('dotenv').config();
@@ -26,10 +28,13 @@ app.get('/', (req, res) => {
 });
 
 app.use('/login', loginRouter);
+app.use(jwtAuthenticate);
 app.use('/purchase-order', poRouter);
+app.use('/invoice', invoiceRouter);
 
 // Express error catch
 app.use((err, req, res, next) => {
+  console.error(err);
   const prismaError = err instanceof Prisma.PrismaClientKnownRequestError;
   if (prismaError && (err.code.startsWith('P1') || err.code === 'P2024')) {
     return res.status(500).json('Internal Server Error');
