@@ -1,5 +1,14 @@
 const queries = require('../lib/queries');
 
+async function allInvoice(req, res, next) {
+  try {
+    const invoices = await queries.allInvoice();
+    return res.status(200).json(invoices);
+  } catch (error) {
+    next(error);
+  }
+}
+
 async function newInvoice(req, res, next) {
   try {
     const { allowMissmatch, selectedIds } = req.body;
@@ -80,4 +89,4 @@ async function newInvoice(req, res, next) {
   }
 }
 
-module.exports = { newInvoice };
+module.exports = { allInvoice, newInvoice };
