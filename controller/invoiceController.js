@@ -1,9 +1,16 @@
 const queries = require('../lib/queries');
+const { calculateTotalPaid } = require('../utils/calculateTotalPaid');
 
 async function allInvoice(req, res, next) {
   try {
+    // Get all invoice data and calculate
     const invoices = await queries.allInvoice();
-    return res.status(200).json(invoices);
+    const result = invoices.map((invoice) => {
+      const totalPaid = calculateTotalPaid(invoice.paymentDetails);
+      return { ...invoice, totalPaid };
+    });
+
+    return res.status(200).json(result);
   } catch (error) {
     next(error);
   }
@@ -89,4 +96,26 @@ async function newInvoice(req, res, next) {
   }
 }
 
-module.exports = { allInvoice, newInvoice };
+async function payInvoice(req, res, next) {
+  try {
+    const id = Number(req.params.invoiceId);
+    const invoice = await queries.getInvoiceById(id);
+    // Check if the invoice is already paid, return error if the invoice already paid
+    if (invoice.status === 'Paid') {
+      return res.status(400).json('Invoice already paid');
+    }
+    // Pay invoice and calculate total payment on invoice
+    const payInvoice = await queries.payInvoice(id, req.body);
+    const totalPaid = calculateTotalPaid(payInvoice.paymentDetails);
+    if (totalPaid === payInvoice.amount[0].total) {
+      // For fully paid invoice, update invoice status
+      const updatePaymentStatus = await queries.updatePaymentStatus(id, 'paid');
+      return res.status(200).json({ ...updatePaymentStatus, totalPaid });
+    }
+    return res.status(200).json({ ...payInvoice, totalPaid });
+  } catch (error) {
+    next(error);
+  }
+}
+
+module.exports = { allInvoice, newInvoice, payInvoice };
