@@ -22,7 +22,7 @@ async function newInvoice(req, res, next) {
     if (allowMissmatch) {
       const { printDetails } = req.body;
       const newInvoice = await queries.newInvoice(selectedIds, printDetails);
-      return res.status(201).json('Invoice created');
+      return res.status(201).json(newInvoice);
     }
 
     /* 
