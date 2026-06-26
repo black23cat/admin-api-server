@@ -1,16 +1,61 @@
 const queries = require('../lib/queries');
 const { calculateTotalPaid } = require('../utils/calculateTotalPaid');
+const { format, startOfWeek, endOfWeek } = require('date-fns');
 
 async function allInvoice(req, res, next) {
   try {
+    const { page, filter } = req.query;
+    const currentPage = Number(!page ? 1 : page);
+
+    const filterOptions = {};
+    if (filter === '1') {
+      // Get user current page and data filter if exist
+      const { query, sortBy, dateStart, dateEnd } = req.query;
+
+      // Set up options for filtering data
+      const options = {
+        where: {
+          customerName: { contains: query, mode: 'insensitive' },
+        },
+        orderBy: { [sortBy]: 'asc' },
+      };
+      if (sortBy === 'amount') {
+        delete options.orderBy;
+      }
+
+      //Check if there's any date provided
+      if (dateStart !== '' && dateEnd !== '') {
+        options.where.AND = {
+          createdAt: { gte: new Date(dateStart), lte: new Date(dateEnd) },
+        };
+      } else if (dateStart !== '' && dateEnd === '') {
+        options.where.AND = {
+          createdAt: { gte: new Date(dateStart) },
+        };
+      } else if (dateStart === '' && dateEnd !== '') {
+        options.where.AND = {
+          createdAt: { gte: new Date(dateEnd) },
+        };
+      }
+
+      filterOptions.where = options.where;
+      filterOptions.orderBy = options.orderBy;
+    }
+
     // Get all invoice data and calculate
-    const invoices = await queries.allInvoice();
+    const [invoices, invoiceCount] = await Promise.all([
+      queries.allInvoice(currentPage, filterOptions),
+      queries.countAllInvoice(filterOptions),
+    ]);
     const result = invoices.map((invoice) => {
       const totalPaid = calculateTotalPaid(invoice.paymentDetails);
       return { ...invoice, totalPaid };
     });
+    if (req.query.sortBy === 'amount') {
+      result.sort((prev, next) => prev.amount[0].total - next.amount[0].total);
+    }
 
-    return res.status(200).json(result);
+    return res.status(200).json({ invoiceList: result, count: invoiceCount });
   } catch (error) {
     next(error);
   }
