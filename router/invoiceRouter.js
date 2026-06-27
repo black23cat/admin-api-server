@@ -6,5 +6,6 @@ const invoiceRouter = Router();
 invoiceRouter.get('/', controller.allInvoice);
 invoiceRouter.post('/create', controller.newInvoice);
 invoiceRouter.put('/pay/:invoiceId', controller.payInvoice);
+invoiceRouter.put('/cancel/:invoiceId', controller.cancelInvoice);
 
 module.exports = invoiceRouter;

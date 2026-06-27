@@ -163,4 +163,22 @@ async function payInvoice(req, res, next) {
   }
 }
 
-module.exports = { allInvoice, newInvoice, payInvoice };
+async function cancelInvoice(req, res, next) {
+  try {
+    const { invoiceId } = req.params;
+    const id = Number(invoiceId);
+    const invoiceData = await queries.getInvoiceById(id);
+    if (
+      invoiceData.status === 'Paid' ||
+      invoiceData.paymentDetails.length > 0
+    ) {
+      return res.status(400).json('Invoice sudah terbayar');
+    }
+    const invoice = await queries.cancelInvoice(id);
+    return res.status(200).json(invoice);
+  } catch (error) {
+    next(error);
+  }
+}
+
+module.exports = { allInvoice, newInvoice, payInvoice, cancelInvoice };
