@@ -6,6 +6,7 @@ const loginRouter = require('./router/loginRouter.js');
 const poRouter = require('./router/poRouter.js');
 const invoiceRouter = require('./router/invoiceRouter.js');
 const { PrismaClient, Prisma } = require('./generated/prisma/client');
+const jobDataRouter = require('./router/jobDataRouter.js');
 
 require('dotenv').config();
 require('./config/passport-local');
@@ -31,6 +32,7 @@ app.use('/login', loginRouter);
 app.use(jwtAuthenticate);
 app.use('/purchase-order', poRouter);
 app.use('/invoice', invoiceRouter);
+app.use('/job-data', jobDataRouter);
 
 // Express error catch
 app.use((err, req, res, next) => {
