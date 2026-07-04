@@ -181,4 +181,59 @@ async function cancelInvoice(req, res, next) {
   }
 }
 
-module.exports = { allInvoice, newInvoice, payInvoice, cancelInvoice };
+async function getPaymentData(req, res, next) {
+  try {
+    const { page, query, dateStart, dateEnd } = req.query;
+    const currentPage = Number(page) || 1;
+    const options = {};
+
+    if (
+      (dateStart === '' && dateEnd === '') ||
+      (typeof dateStart !== 'string' && typeof dateEnd !== 'string')
+    ) {
+      const todayDate = new Date();
+      const thisWeekStartDate = startOfWeek(todayDate, { weekStartsOn: 1 });
+      const thisWeekEndDate = endOfWeek(todayDate, { weekStartsOn: 1 });
+      options.where = {
+        paymentDate: { gte: thisWeekStartDate, lte: thisWeekEndDate },
+      };
+    } else if (
+      (dateStart !== '' && dateEnd === '') ||
+      (typeof dateStart === 'string' && typeof dateEnd !== 'string')
+    ) {
+      options.where = {
+        paymentDate: { gte: new Date(dateStart) },
+      };
+    } else if (
+      (dateStart === '' && dateEnd !== '') ||
+      (typeof dateStart !== 'string' && typeof dateEnd === 'string')
+    ) {
+      options.where = {
+        paymentDate: { lte: new Date(dateEnd) },
+      };
+    } else {
+      options.where = {
+        paymentDate: { gte: new Date(dateStart), lte: new Date(dateEnd) },
+      };
+    }
+
+    if (query !== '' && typeof query === 'string') {
+      options.where.AND = {
+        invoice: { customerName: { contains: query, mode: 'insensitive' } },
+      };
+    }
+
+    const paymentData = await queries.getPaymentData(currentPage, options);
+    return res.status(200).json(paymentData);
+  } catch (error) {
+    next(error);
+  }
+}
+
+module.exports = {
+  allInvoice,
+  newInvoice,
+  payInvoice,
+  cancelInvoice,
+  getPaymentData,
+};
