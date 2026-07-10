@@ -1,6 +1,7 @@
 const queries = require('../lib/queries');
 const { calculateTotalPaid } = require('../utils/calculateTotalPaid');
 const { format, startOfWeek, endOfWeek } = require('date-fns');
+const { alternateFilenamePattern } = require('../utils/regexPattern');
 
 async function allInvoice(req, res, next) {
   try {
@@ -66,8 +67,31 @@ async function newInvoice(req, res, next) {
     const { allowMissmatch, selectedIds } = req.body;
     if (allowMissmatch) {
       const { printDetails } = req.body;
-      const newInvoice = await queries.newInvoice(selectedIds, printDetails);
-      return res.status(201).json(newInvoice);
+      const ecoSolvent = printDetails.eco.printLength * printDetails.eco.price;
+      const ecoBahan =
+        printDetails.ecoBahan.printLength * printDetails.ecoBahan.price;
+      const sublimPress =
+        printDetails.sublimPress.printLength * printDetails.sublimPress.price;
+      const sublim =
+        printDetails.sublim.printLength * printDetails.sublim.price;
+
+      const invoiceData = {
+        customerName: printDetails.customerName,
+        amount: {
+          create: {
+            ecoSolvent: ecoSolvent,
+            ecoBahan: ecoBahan,
+            sublimPress: sublimPress,
+            sublim: sublim,
+            total: ecoSolvent + ecoBahan + sublim + sublimPress,
+          },
+        },
+      };
+
+      const newInvoice = await queries.newInvoice(selectedIds, invoiceData);
+      return res
+        .status(201)
+        .json({ invoice: invoiceData, updatedPoId: selectedIds });
     }
 
     /* 
@@ -79,12 +103,16 @@ async function newInvoice(req, res, next) {
     */
 
     let isSame = true;
-    let ecoSolventPoLength = 0;
-    let sublimPoLength = 0;
+    let ecoLength = 0;
+    let ecoBahanLength = 0;
+    let sublimPressLength = 0;
+    let sublimLength = 0;
     const purchaseOrderList = await queries.getPoByIds(selectedIds);
     const customerName = [purchaseOrderList[0].customerName];
     const defaultPrice = {
       eco: 27000,
+      ecoBahan: 45000,
+      sublimPress: 33000,
       sublim: 53000,
     };
     if (!allowMissmatch) {
@@ -100,17 +128,27 @@ async function newInvoice(req, res, next) {
         po.fileList.forEach((file) => {
           const filename = file.filename.split('_');
           //Extract file length
-          const fileDimension = Number(filename[2].split('x')[1]);
-          //calculate each file total length and asign it to specific po type
-          const printCount = Number(
-            filename[filename.length - 1].toLowerCase().replace('x', ''),
+          const alternateFilePattern = alternateFilenamePattern(file.filename);
+          const fileDimensionIndex = alternateFilePattern ? 1 : 2;
+          const fileDimension = Number(
+            filename[fileDimensionIndex].split('x')[1],
           );
+          //calculate each file total length and asign it to specific po type
+          const printCount = alternateFilePattern
+            ? 1
+            : Number(
+                filename[filename.length - 1].toLowerCase().replace('x', ''),
+              );
           const CM_TO_METER = 100;
           const totalFileLength = (fileDimension * printCount) / CM_TO_METER;
           if (po.poType === 'eco') {
-            return (ecoSolventPoLength += totalFileLength);
+            return (ecoLength += totalFileLength);
+          } else if (po.poType === 'ecoBahan') {
+            return (ecoBahanLength += totalFileLength);
           } else if (po.poType === 'sublim') {
-            return (sublimPoLength += totalFileLength);
+            return (sublimLength += totalFileLength);
+          } else if (po.poType === 'sublimPress') {
+            return (sublimPressLength += totalFileLength);
           }
         });
       }
@@ -121,11 +159,19 @@ async function newInvoice(req, res, next) {
       customerName: customerName.join('_'),
       printDetails: {
         eco: {
-          printLength: ecoSolventPoLength > 0 ? ecoSolventPoLength : null,
+          printLength: ecoLength > 0 ? ecoLength : null,
           price: defaultPrice.eco,
         },
+        ecoBahan: {
+          printLength: ecoBahanLength > 0 ? ecoBahanLength : null,
+          price: defaultPrice.ecoBahan,
+        },
+        sublimPress: {
+          printLength: sublimPressLength > 0 ? sublimPressLength : null,
+          price: defaultPrice.sublimPress,
+        },
         sublim: {
-          printLength: sublimPoLength > 0 ? sublimPoLength : null,
+          printLength: sublimLength > 0 ? sublimLength : null,
           price: defaultPrice.sublim,
         },
       },

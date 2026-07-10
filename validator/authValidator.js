@@ -23,7 +23,12 @@ const newPoValidator = [
     .trim()
     .escape()
     .custom((value) => {
-      return value === 'eco' || value === 'sublim' ? true : false;
+      return value === 'eco' ||
+        value === 'ecoBahan' ||
+        value === 'sublim' ||
+        value === 'sublimPress'
+        ? true
+        : false;
     }),
   body('fileList')
     .custom((values, { req }) => {

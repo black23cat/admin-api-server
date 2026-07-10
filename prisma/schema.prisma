@@ -55,12 +55,14 @@ model Invoice {
 }
 
 model Amount {
-  id         Int     @id() @default(autoincrement())
-  ecoSolvent Int?
-  sublim     Int?
-  total      Int
-  invoice    Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
-  invoiceId  Int
+  id          Int     @id() @default(autoincrement())
+  ecoSolvent  Int?
+  ecoBahan    Int?
+  sublimPress Int?
+  sublim      Int?
+  total       Int
+  invoice     Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  invoiceId   Int
 }
 
 model PaymentDetails {
@@ -72,6 +74,13 @@ model PaymentDetails {
   invoiceId   Int
 }
 
+model NonPrintItem {
+  id           Int    @id @default(autoincrement())
+  itemName     String
+  count        Int
+  pricePerItem Int
+}
+
 enum Role {
   Admin
   User
@@ -79,6 +88,8 @@ enum Role {
 
 enum PrintType {
   eco
+  ecoBahan
+  sublimPress
   sublim
 }
 
