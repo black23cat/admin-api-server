@@ -74,19 +74,48 @@ async function newInvoice(req, res, next) {
         printDetails.sublimPress.printLength * printDetails.sublimPress.price;
       const sublim =
         printDetails.sublim.printLength * printDetails.sublim.price;
+      const cashbackAmount =
+        printDetails.cashback === null
+          ? 0
+          : Number(printDetails.cashback.amount);
 
       const invoiceData = {
         customerName: printDetails.customerName,
+        cashbackNotes:
+          printDetails.cashback === null ? null : printDetails.cashback.note,
         amount: {
           create: {
             ecoSolvent: ecoSolvent,
             ecoBahan: ecoBahan,
             sublimPress: sublimPress,
             sublim: sublim,
-            total: ecoSolvent + ecoBahan + sublim + sublimPress,
+            cashbackAmount: cashbackAmount,
+            total:
+              ecoSolvent + ecoBahan + sublim + sublimPress - cashbackAmount,
           },
         },
       };
+
+      let nonPrintItemsTotalAmount = 0;
+      const nonPrintItems =
+        printDetails.nonPrintItems === null ||
+        printDetails.nonPrintItems.length === 0
+          ? null
+          : printDetails.nonPrintItems.map((item) => {
+              nonPrintItemsTotalAmount +=
+                Number(item.itemCount) * Number(item.itemPrice);
+              return {
+                itemName: item.itemName,
+                count: Number(item.itemCount),
+                pricePerItem: Number(item.itemPrice),
+              };
+            });
+
+      if (nonPrintItems !== null && nonPrintItems.length > 0) {
+        invoiceData.nonPrintItems = { createMany: { data: nonPrintItems } };
+        invoiceData.amount.create.nonPrintAmount = nonPrintItemsTotalAmount;
+        invoiceData.amount.create.total += nonPrintItemsTotalAmount;
+      }
 
       const newInvoice = await queries.newInvoice(selectedIds, invoiceData);
       return res

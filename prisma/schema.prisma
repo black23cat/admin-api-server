@@ -42,27 +42,30 @@ model File {
 }
 
 model Invoice {
-  id            Int           @id() @default(autoincrement())
-  invoiceNumber Int           @default(autoincrement())
-  customerName  String
-  customerPhone String?
-  amount        Amount[]
-  createdAt     DateTime      @default(now())
-  status        PaymentStatus @default(Pending)
-
+  id             Int              @id() @default(autoincrement())
+  invoiceNumber  Int              @default(autoincrement())
+  customerName   String
+  customerPhone  String?
+  amount         Amount[]
+  createdAt      DateTime         @default(now())
+  status         PaymentStatus    @default(Pending)
+  cashbackNotes  String?
+  nonPrintItems  NonPrintItem[]
   purchaseOrders PurchaseOrder[]
   paymentDetails PaymentDetails[]
 }
 
 model Amount {
-  id          Int     @id() @default(autoincrement())
-  ecoSolvent  Int?
-  ecoBahan    Int?
-  sublimPress Int?
-  sublim      Int?
-  total       Int
-  invoice     Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
-  invoiceId   Int
+  id             Int     @id() @default(autoincrement())
+  ecoSolvent     Int?
+  ecoBahan       Int?
+  sublimPress    Int?
+  sublim         Int?
+  cashbackAmount Int?
+  nonPrintAmount Int?
+  total          Int
+  invoice        Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  invoiceId      Int
 }
 
 model PaymentDetails {
@@ -75,10 +78,12 @@ model PaymentDetails {
 }
 
 model NonPrintItem {
-  id           Int    @id @default(autoincrement())
-  itemName     String
-  count        Int
-  pricePerItem Int
+  id           Int      @id @default(autoincrement())
+  itemName     String?
+  count        Int?
+  pricePerItem Int?
+  invoice      Invoice? @relation(fields: [invoiceId], references: [id])
+  invoiceId    Int?
 }
 
 enum Role {
