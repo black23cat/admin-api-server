@@ -14,6 +14,7 @@ require('./config/passport-jwt');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+const HOST = process.env.HOST || '0.0.0.0';
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -52,7 +53,7 @@ app.use((err, req, res, next) => {
     .json({ message: err.message || 'Internal Server Error' });
 });
 
-app.listen(PORT, (err) => {
+app.listen(PORT, HOST, (err) => {
   if (err) {
     console.log(err);
   }
