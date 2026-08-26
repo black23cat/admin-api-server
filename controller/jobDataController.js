@@ -36,9 +36,13 @@ async function jobData(req, res, next) {
     if (dateStart === '' && dateEnd === '') {
       delete options.where.AND;
     }
+    const [jobData, jobDataCount] = await Promise.all([
+      queries.getJobData(currentPage, options),
+      queries.countJobData(options),
+    ]);
 
-    const jobData = await queries.getJobData(currentPage, options);
-    return res.status(200).json(jobData);
+    // const jobData = await queries.getJobData(currentPage, options);
+    return res.status(200).json({ jobData, jobDataCount });
   } catch (error) {
     next(error);
   }
