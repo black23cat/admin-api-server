@@ -15,15 +15,15 @@ require('./config/passport-jwt');
 const app = express();
 const PORT = process.env.PORT || 3000;
 const HOST = process.env.HOST || '0.0.0.0';
+const corsOptions = {
+  origin: process.env.ALLOWED_ORIGIN || '',
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  optionsSuccessStatus: 200,
+};
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(
-  cors({
-    optionsSuccessStatus: 200,
-    origin: '*',
-  }),
-);
+app.use(cors(corsOptions));
 
 app.get('/', (req, res) => {
   res.json('Hello');
