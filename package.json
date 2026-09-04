@@ -4,7 +4,8 @@
   "main": "index.js",
   "type": "commonjs",
   "scripts": {
-    "start": "node --watch app.js"
+    "start": "node --watch app.js",
+    "postinstall": "prisma generate"
   },
   "keywords": [],
   "author": "",
