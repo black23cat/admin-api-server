@@ -5,7 +5,8 @@ function matchFilename(filename) {
 }
 
 function alternateFilenamePattern(filename) {
-  const alternateFilename = /^[a-zA-Z0-9\s()-]+_\d{2,3}x\d{2,3}$/;
+  const alternateFilename =
+    /^[a-zA-Z0-9\s()-]+_\d{2,3}[xX]\d{2,3}(?:_(\d{1,3}[xX]?|[a-zA-Z]{2}))?$/i;
   return alternateFilename.test(filename);
 }
 

@@ -2,6 +2,7 @@ const queries = require('../lib/queries');
 const { calculateTotalPaid } = require('../utils/calculateTotalPaid');
 const { format, startOfWeek, endOfWeek } = require('date-fns');
 const { alternateFilenamePattern } = require('../utils/regexPattern');
+const { roundTotal } = require('../utils/roundTotal');
 
 async function allInvoice(req, res, next) {
   try {
@@ -116,13 +117,15 @@ async function newInvoice(req, res, next) {
         invoiceData.amount.create.nonPrintAmount = nonPrintItemsTotalAmount;
         invoiceData.amount.create.total += nonPrintItemsTotalAmount;
       }
+      invoiceData.amount.create.total = roundTotal(
+        invoiceData.amount.create.total,
+      );
 
       const newInvoice = await queries.newInvoice(selectedIds, invoiceData);
       return res
         .status(201)
         .json({ invoice: invoiceData, updatedPoId: selectedIds });
     }
-
     /* 
     --------------------------------------------------------
     Check if all po has same customer name
@@ -163,11 +166,13 @@ async function newInvoice(req, res, next) {
             filename[fileDimensionIndex].split('x')[1],
           );
           //calculate each file total length and asign it to specific po type
-          const printCount = alternateFilePattern
-            ? 1
-            : Number(
-                filename[filename.length - 1].toLowerCase().replace('x', ''),
-              );
+          const printCount =
+            (alternateFilePattern && filename.length === 3) ||
+            (!alternateFilePattern && filename.length === 5)
+              ? Number(
+                  filename[filename.length - 1].toLowerCase().replace('x', ''),
+                )
+              : 1;
           const CM_TO_METER = 100;
           const totalFileLength = (fileDimension * printCount) / CM_TO_METER;
           if (po.poType === 'eco') {
