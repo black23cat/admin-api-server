@@ -54,13 +54,13 @@ Backend Server for admin api written in node.js with express and prisma API. Thi
 
 ### 1. Clone the repo
 
-```
+```sh
 git clone https://github.com/black23cat/admin-api-server.git
 ```
 
 #### 2. Move into the project directory and install dependencies
 
-```
+```sh
 cd admin-api-server && npm install
 ```
 
@@ -69,7 +69,7 @@ cd admin-api-server && npm install
 Create .env file in root directory with DATABASE_URL and JWT_SECRET
 Example:
 
-```
+```env
 DATABASE_URL="postgresql://USERNAME:PASSWORD@HOST:PORT/DATABASE"
 JWT_SECRET="your-secret-key"
 ```
@@ -78,27 +78,41 @@ JWT_SECRET="your-secret-key"
 
 ### 1. Generate prisma client
 
-```
+```sh
 npx prisma Generate
 ```
 
 #### 2. Run Database migration
 
-```
+```sh
 npx prisma migrate dev
+```
+
+#### 3. Seed database with user and PO Data
+
+```sh
+npx prisma db seed
+```
+
+You can change username and password in "prisma/seed.js" file and find userData object.
+The default username and admin password is
+
+```js
+username = admin;
+password = admin123;
 ```
 
 ## ▶️ Running the Application
 
 ### 1. Start development server
 
-```
-npm run dev
+```sh
+npm run start
 ```
 
-#### 2.The default configuration will start the server on:
+#### 2.The default configuration will start the server on
 
-```
+```sh
 http://localhost:3000
 ```
 
