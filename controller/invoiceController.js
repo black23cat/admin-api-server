@@ -1,6 +1,6 @@
 const queries = require('../lib/queries');
 const { calculateTotalPaid } = require('../utils/calculateTotalPaid');
-const { format, startOfWeek, endOfWeek } = require('date-fns');
+const { startOfWeek, endOfWeek } = require('date-fns');
 const { alternateFilenamePattern } = require('../utils/regexPattern');
 const { roundTotal } = require('../utils/roundTotal');
 
@@ -68,13 +68,18 @@ async function newInvoice(req, res, next) {
     const { allowMissmatch, selectedIds } = req.body;
     if (allowMissmatch) {
       const { printDetails } = req.body;
-      const ecoSolvent = printDetails.eco.printLength * printDetails.eco.price;
-      const ecoBahan =
-        printDetails.ecoBahan.printLength * printDetails.ecoBahan.price;
-      const sublimPress =
-        printDetails.sublimPress.printLength * printDetails.sublimPress.price;
-      const sublim =
-        printDetails.sublim.printLength * printDetails.sublim.price;
+      const ecoSolvent = roundTotal(
+        printDetails.eco.printLength * printDetails.eco.price,
+      );
+      const ecoBahan = roundTotal(
+        printDetails.ecoBahan.printLength * printDetails.ecoBahan.price,
+      );
+      const sublimPress = roundTotal(
+        printDetails.sublimPress.printLength * printDetails.sublimPress.price,
+      );
+      const sublim = roundTotal(
+        printDetails.sublim.printLength * printDetails.sublim.price,
+      );
       const cashbackAmount =
         printDetails.cashback === null
           ? 0
@@ -95,6 +100,34 @@ async function newInvoice(req, res, next) {
               ecoSolvent + ecoBahan + sublim + sublimPress - cashbackAmount,
           },
         },
+        printItemDetails: {
+          create: {
+            sublim: {
+              create: {
+                price: Number(printDetails.sublim.price),
+                totalLength: Number(printDetails.sublim.printLength),
+              },
+            },
+            sublimPress: {
+              create: {
+                price: Number(printDetails.sublimPress.price),
+                totalLength: Number(printDetails.sublimPress.printLength),
+              },
+            },
+            eco: {
+              create: {
+                price: Number(printDetails.eco.price),
+                totalLength: Number(printDetails.eco.printLength),
+              },
+            },
+            ecoBahan: {
+              create: {
+                price: Number(printDetails.ecoBahan.price),
+                totalLength: Number(printDetails.ecoBahan.printLength),
+              },
+            },
+          },
+        },
       };
 
       let nonPrintItemsTotalAmount = 0;
@@ -103,8 +136,9 @@ async function newInvoice(req, res, next) {
         printDetails.nonPrintItems.length === 0
           ? null
           : printDetails.nonPrintItems.map((item) => {
-              nonPrintItemsTotalAmount +=
-                Number(item.itemCount) * Number(item.itemPrice);
+              nonPrintItemsTotalAmount += roundTotal(
+                Number(item.itemCount) * Number(item.itemPrice),
+              );
               return {
                 itemName: item.itemName,
                 count: Number(item.itemCount),
@@ -117,14 +151,15 @@ async function newInvoice(req, res, next) {
         invoiceData.amount.create.nonPrintAmount = nonPrintItemsTotalAmount;
         invoiceData.amount.create.total += nonPrintItemsTotalAmount;
       }
-      invoiceData.amount.create.total = roundTotal(
-        invoiceData.amount.create.total,
-      );
 
-      const newInvoice = await queries.newInvoice(selectedIds, invoiceData);
+      const newInvoice = await queries.newInvoice(
+        selectedIds,
+        invoiceData,
+        printDetails,
+      );
       return res
         .status(201)
-        .json({ invoice: invoiceData, updatedPoId: selectedIds });
+        .json({ invoice: newInvoice, updatedPoId: selectedIds });
     }
     /* 
     --------------------------------------------------------

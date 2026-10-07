@@ -72,6 +72,7 @@ Example:
 ```env
 DATABASE_URL="postgresql://USERNAME:PASSWORD@HOST:PORT/DATABASE"
 JWT_SECRET="your-secret-key"
+ALLOWED_ORIGIN='http://localhost:5173'
 ```
 
 ## 🗄 Database Setup

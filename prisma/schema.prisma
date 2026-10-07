@@ -42,17 +42,18 @@ model File {
 }
 
 model Invoice {
-  id             Int              @id() @default(autoincrement())
-  invoiceNumber  Int              @default(autoincrement())
-  customerName   String
-  customerPhone  String?
-  amount         Amount[]
-  createdAt      DateTime         @default(now())
-  status         PaymentStatus    @default(Pending)
-  cashbackNotes  String?
-  nonPrintItems  NonPrintItem[]
-  purchaseOrders PurchaseOrder[]
-  paymentDetails PaymentDetails[]
+  id               Int                @id() @default(autoincrement())
+  invoiceNumber    Int                @default(autoincrement())
+  customerName     String
+  customerPhone    String?
+  amount           Amount[]
+  createdAt        DateTime           @default(now())
+  status           PaymentStatus      @default(Pending)
+  cashbackNotes    String?
+  nonPrintItems    NonPrintItem[]
+  purchaseOrders   PurchaseOrder[]
+  paymentDetails   PaymentDetails[]
+  printItemDetails PrintItemDetails[]
 }
 
 model Amount {
@@ -84,6 +85,48 @@ model NonPrintItem {
   pricePerItem Int?
   invoice      Invoice? @relation(fields: [invoiceId], references: [id])
   invoiceId    Int?
+}
+
+model PrintItemDetails {
+  id          Int                  @id @default(autoincrement())
+  invoice     Invoice              @relation(fields: [invoiceId], references: [id])
+  invoiceId   Int
+  sublim      SublimDetails[]
+  sublimPress SublimPressDetails[]
+  eco         ecoDetails[]
+  ecoBahan    ecoBahanDetails[]
+}
+
+model SublimDetails {
+  id                 Int               @id @default(autoincrement())
+  price              Int?
+  totalLength        Float?            @db.DoublePrecision
+  printItemDetails   PrintItemDetails? @relation(fields: [printItemDetailsId], references: [id])
+  printItemDetailsId Int?
+}
+
+model SublimPressDetails {
+  id                 Int               @id @default(autoincrement())
+  price              Int?
+  totalLength        Float?            @db.DoublePrecision
+  printItemDetails   PrintItemDetails? @relation(fields: [printItemDetailsId], references: [id])
+  printItemDetailsId Int?
+}
+
+model ecoDetails {
+  id                 Int               @id @default(autoincrement())
+  price              Int?
+  totalLength        Float?            @db.DoublePrecision
+  printItemDetails   PrintItemDetails? @relation(fields: [printItemDetailsId], references: [id])
+  printItemDetailsId Int?
+}
+
+model ecoBahanDetails {
+  id                 Int               @id @default(autoincrement())
+  price              Int?
+  totalLength        Float?            @db.DoublePrecision
+  printItemDetails   PrintItemDetails? @relation(fields: [printItemDetailsId], references: [id])
+  printItemDetailsId Int?
 }
 
 enum Role {

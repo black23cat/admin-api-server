@@ -5,7 +5,8 @@
   "type": "commonjs",
   "scripts": {
     "start": "node --watch app.js",
-    "postinstall": "prisma generate"
+    "postinstall": "prisma generate",
+    "build": "npx prisma migrate deploy && next build"
   },
   "keywords": [],
   "author": "",
